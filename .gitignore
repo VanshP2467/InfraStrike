@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+*.spec
+
+# uv / virtualenv
+.venv/
+.uv/
+uv.lock
+
+# pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+*.xml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Raspberry Pi camera / OpenCV artefacts
+*.h264
+*.yuv
+*.raw
+
+# macOS
+.DS_Store
