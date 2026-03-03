@@ -43,16 +43,13 @@ def main() -> None:
             # 2. Detect IR shot position in the frame.
             shot_position = detector.detect(frame)
 
-            # 3. Poll hardware trigger.
-            trigger_pressed = gpio.read_trigger()
+            # 3. Update game state – the flash itself is the trigger.
+            engine.update(shot_position=shot_position)
 
-            # 4. Update game state.
-            engine.update(shot_position=shot_position, trigger_pressed=trigger_pressed)
-
-            # 5. Render the current frame + HUD.
+            # 4. Render the current frame + HUD.
             display.render(engine.get_state(), frame)
 
-            # 6. Handle pygame quit events.
+            # 5. Handle pygame quit events.
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     engine.stop()

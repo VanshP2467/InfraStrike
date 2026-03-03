@@ -5,11 +5,11 @@ import pytest
 from infrastrike.hardware.gpio_controller import GPIOController
 
 
-class TestGPIOControllerSimulationMode:
-    """Tests that run on non-Pi hardware using keyboard simulation mode."""
+class TestGPIOControllerLEDMode:
+    """Tests for the LED-only GPIO controller on non-Pi hardware."""
 
     def setup_method(self):
-        self.gpio = GPIOController(trigger_pin=17, led_pin=27)
+        self.gpio = GPIOController(led_pin=27)
         self.gpio.setup()
 
     def teardown_method(self):
@@ -17,18 +17,6 @@ class TestGPIOControllerSimulationMode:
 
     def test_setup_marks_ready(self):
         assert self.gpio.is_ready
-
-    def test_trigger_not_pressed_initially(self):
-        assert self.gpio.read_trigger() is False
-
-    def test_simulate_trigger_press(self):
-        self.gpio.simulate_trigger_press()
-        assert self.gpio.read_trigger() is True
-
-    def test_simulated_trigger_auto_resets(self):
-        self.gpio.simulate_trigger_press()
-        self.gpio.read_trigger()  # consume
-        assert self.gpio.read_trigger() is False  # now reset
 
     def test_cleanup_clears_ready(self):
         self.gpio.cleanup()

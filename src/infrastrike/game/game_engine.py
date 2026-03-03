@@ -59,7 +59,7 @@ class GameEngine:
         engine = GameEngine()
         engine.start()
         while engine.is_running():
-            engine.update(shot_position=pos, trigger_pressed=True)
+            engine.update(shot_position=pos)
             state = engine.get_state()
     """
 
@@ -110,16 +110,15 @@ class GameEngine:
     def update(
         self,
         shot_position: ShotPosition | None,
-        trigger_pressed: bool,
     ) -> None:
         """Advance game state by one frame.
 
         Parameters
         ----------
         shot_position:
-            IR blob centroid from the detector, or ``None`` if no shot seen.
-        trigger_pressed:
-            Whether the physical trigger button is currently held.
+            IR blob centroid from the detector, or ``None`` if no flash seen.
+            Detection of the flash is the sole trigger – no separate button
+            press is required.
         """
         if self._phase != GamePhase.RUNNING:
             return
@@ -148,7 +147,7 @@ class GameEngine:
         self._targets = [t for t in self._targets if t.is_active]
 
         # ── Process shot ─────────────────────────────────────────────────────
-        if shot_position is not None and trigger_pressed:
+        if shot_position is not None:
             self._last_shot = shot_position
             hit_any = False
             for target in self._targets:

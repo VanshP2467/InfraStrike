@@ -141,7 +141,7 @@ class TestGameEngine:
         engine.start()
         time.sleep(1.1)
         from infrastrike.detection.ir_detector import ShotPosition
-        engine.update(shot_position=None, trigger_pressed=False)
+        engine.update(shot_position=None)
         assert engine.get_state().phase == GamePhase.GAME_OVER
 
     def test_hit_increases_score(self):
@@ -152,5 +152,5 @@ class TestGameEngine:
         engine._targets = [Target(x=300, y=200, radius=40, lifetime_ms=5000)]
 
         from infrastrike.detection.ir_detector import ShotPosition
-        engine.update(shot_position=ShotPosition(300, 200), trigger_pressed=True)
+        engine.update(shot_position=ShotPosition(300, 200))
         assert engine.get_state().score > 0

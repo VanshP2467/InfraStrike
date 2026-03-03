@@ -39,5 +39,5 @@ POINTS_PER_HIT: int = 10
 PENALTY_PER_MISS: int = 5
 
 # ── Hardware / GPIO ───────────────────────────────────────────────────────────
-GPIO_TRIGGER_PIN: int = 17   # BCM pin number for trigger button
+# No GPIO trigger – the IR flash detected by the camera is the sole trigger.
 GPIO_LED_PIN: int = 27       # BCM pin number for status LED
