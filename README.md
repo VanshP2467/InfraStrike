@@ -112,6 +112,7 @@ git clone https://github.com/VanshP2467/InfraStrike.git
 cd InfraStrike
 
 # 3. Create the virtual environment and install core dependencies
+uv venv --system-site-packages
 uv sync
 
 # 4a. On Raspberry Pi – also install Pi-specific packages
