@@ -23,7 +23,7 @@ import pygame
 from config.settings import DISPLAY_FPS, DISPLAY_FULLSCREEN, DISPLAY_HEIGHT, DISPLAY_TITLE, DISPLAY_WIDTH
 from infrastrike.game.game_engine import GamePhase, GameState
 from infrastrike.ui.hud import HUD
-
+from infrastrike.path_utils import asset_path
 logger = logging.getLogger(__name__)
 
 # Colours
@@ -68,11 +68,22 @@ class Display:
         self._hud = HUD(self._screen)
         self._font = pygame.font.SysFont("monospace", 36, bold=True)
 
+        self._start_bg = None
+        try:
+            bg_path = asset_path("images", "infrastrike_bg.png")
+            self._start_bg = pygame.image.load(str(bg_path)).convert()
+            self._start_bg = pygame.transform.smoothscale(self._start_bg, (self._width, self._height))
+        except Exception as e:
+            logger.warning("Start background image not loaded: %s", e)
+
     # ── Public API ────────────────────────────────────────────────────────────
 
     def show_start_screen(self) -> None:
         """Block until the player presses ENTER or SPACE to start."""
-        self._screen.fill(DARK_BG)
+        if self._start_bg is not None:
+            self._screen.blit(self._start_bg, (0, 0))
+        else:
+            self._screen.fill(DARK_BG)
 
         title_font = pygame.font.SysFont("monospace", 72, bold=True)
         title_surf = title_font.render("InfraStrike", True, (200, 80, 80))
