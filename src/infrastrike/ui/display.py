@@ -120,6 +120,8 @@ class Display:
         """
         # 1. Camera feed as background.
         self._blit_camera_frame(camera_frame)
+        self._draw_grid(cols=4, rows=4, colour=(0, 255, 0), width=2)
+
 
         # 2. Draw active targets.
         for target in state.targets:
@@ -163,3 +165,23 @@ class Display:
         pygame.draw.circle(self._screen, RED, (cx, cy), max(4, r // 4))
         # Inner white circle.
         pygame.draw.circle(self._screen, WHITE, (cx, cy), max(2, r // 8))
+
+    def _draw_grid(
+            self,
+            cols: int = 4,
+            rows: int = 4,
+            colour: tuple[int, int, int] = (255, 255, 255),
+            width: int = 2,
+    ) -> None:
+        """Draw a cols×rows grid overlay over the whole screen."""
+        w, h = self._width, self._height
+
+        # Vertical lines
+        for c in range(cols + 1):
+            x = int(c * w / cols)
+            pygame.draw.line(self._screen, colour, (x, 0), (x, h), width)
+
+        # Horizontal lines
+        for r in range(rows + 1):
+            y = int(r * h / rows)
+            pygame.draw.line(self._screen, colour, (0, y), (w, y), width)
