@@ -20,7 +20,8 @@ import cv2
 import numpy as np
 import pygame
 
-from config.settings import DISPLAY_FPS, DISPLAY_FULLSCREEN, DISPLAY_HEIGHT, DISPLAY_TITLE, DISPLAY_WIDTH
+from config.settings import DISPLAY_FPS, DISPLAY_FULLSCREEN, DISPLAY_HEIGHT, DISPLAY_TITLE, DISPLAY_WIDTH, \
+    DISPLAY_SHOW_CAMERA_FEED
 from infrastrike.game.game_engine import GamePhase, GameState
 from infrastrike.ui.hud import HUD
 from infrastrike.path_utils import asset_path
@@ -119,7 +120,16 @@ class Display:
             BGR numpy array from the camera layer.
         """
         # 1. Camera feed as background.
-        self._blit_camera_frame(camera_frame)
+        # 1. Background.
+        if DISPLAY_SHOW_CAMERA_FEED:
+            self._blit_camera_frame(camera_frame)
+        else:
+            # Use your static background image instead of the camera feed.
+            # (Assumes you loaded self._start_bg or rename it to self._bg)
+            if getattr(self, "_start_bg", None) is not None:
+                self._screen.blit(self._start_bg, (0, 0))
+            else:
+                self._screen.fill(DARK_BG)
         self._draw_grid(cols=4, rows=4, colour=(0, 255, 0), width=2)
 
 
