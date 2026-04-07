@@ -24,6 +24,7 @@ from config.settings import DISPLAY_FPS, DISPLAY_FULLSCREEN, DISPLAY_HEIGHT, DIS
     DISPLAY_SHOW_CAMERA_FEED
 from infrastrike.game.game_engine import GamePhase, GameState
 from infrastrike.ui.hud import HUD
+from infrastrike.ui.grid import GridSpec, cell_rects
 from infrastrike.path_utils import asset_path
 logger = logging.getLogger(__name__)
 
@@ -34,6 +35,14 @@ RED = (220, 50, 50)
 GREEN_RING = (80, 220, 80)
 YELLOW_RING = (255, 200, 0)
 DARK_BG = (20, 20, 30)
+
+# Grid & HUD
+HUD_HEIGHT = 140
+GRID_MARGIN = 20
+GRID_ROWS = 4
+GRID_COLS = 4
+GRID_LINE_COLOUR = (0, 255, 0)
+GRID_LINE_WIDTH = 2
 
 
 class Display:
@@ -130,7 +139,16 @@ class Display:
                 self._screen.blit(self._start_bg, (0, 0))
             else:
                 self._screen.fill(DARK_BG)
-        self._draw_grid(cols=4, rows=4, colour=(0, 255, 0), width=2)
+        grid_rect = pygame.Rect(
+            GRID_MARGIN,
+            HUD_HEIGHT + GRID_MARGIN,
+            self._width - 2 * GRID_MARGIN,
+            self._height - HUD_HEIGHT - 2 * GRID_MARGIN,
+            )
+
+        # 3) Draw the grid inside that region
+        self._draw_grid_in_rect(grid_rect, cols=4, rows=4, colour=(0, 255, 0), width=2)
+
 
 
         # 2. Draw active targets.
@@ -176,22 +194,20 @@ class Display:
         # Inner white circle.
         pygame.draw.circle(self._screen, WHITE, (cx, cy), max(2, r // 8))
 
-    def _draw_grid(
-            self,
-            cols: int = 4,
-            rows: int = 4,
-            colour: tuple[int, int, int] = (255, 255, 255),
-            width: int = 2,
+    def _draw_grid_in_rect(
+        self,
+        rect: pygame.Rect,
+        cols: int = 4,
+        rows: int = 4,
+        colour: tuple[int, int, int] = (0, 255, 0),
+        width: int = 2,
     ) -> None:
-        """Draw a cols×rows grid overlay over the whole screen."""
-        w, h = self._width, self._height
-
         # Vertical lines
         for c in range(cols + 1):
-            x = int(c * w / cols)
-            pygame.draw.line(self._screen, colour, (x, 0), (x, h), width)
+            x = rect.left + int(c * rect.width / cols)
+            pygame.draw.line(self._screen, colour, (x, rect.top), (x, rect.bottom), width)
 
         # Horizontal lines
         for r in range(rows + 1):
-            y = int(r * h / rows)
-            pygame.draw.line(self._screen, colour, (0, y), (w, y), width)
+            y = rect.top + int(r * rect.height / rows)
+            pygame.draw.line(self._screen, colour, (rect.left, y), (rect.right, y), width)
