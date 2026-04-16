@@ -70,6 +70,15 @@ class Display:
         self._title = title
         self._fullscreen = fullscreen
 
+        self._grid_rect = pygame.Rect(
+            GRID_MARGIN,
+            HUD_HEIGHT + GRID_MARGIN,
+            self._width - 2 * GRID_MARGIN,
+            self._height - HUD_HEIGHT - 2 * GRID_MARGIN,
+            )
+        self._grid_spec = GridSpec(rect=self._grid_rect, rows=GRID_ROWS, cols=GRID_COLS)
+        self._grid_cells = cell_rects(self._grid_spec)  # 2D list of rects (rows×cols)
+
         flags = pygame.FULLSCREEN if fullscreen else 0
         self._screen = pygame.display.set_mode((width, height), flags)
         pygame.display.set_caption(title)
@@ -147,7 +156,13 @@ class Display:
             )
 
         # 3) Draw the grid inside that region
-        self._draw_grid_in_rect(grid_rect, cols=4, rows=4, colour=(0, 255, 0), width=2)
+        self._draw_grid_in_rect(
+            self._grid_rect,
+            cols=self._grid_spec.cols,
+            rows=self._grid_spec.rows,
+            colour=GRID_LINE_COLOUR,
+            width=GRID_LINE_WIDTH,
+        )
 
 
 
