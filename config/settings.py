@@ -30,6 +30,12 @@ DISPLAY_FPS: int = 60
 DISPLAY_TITLE: str = "InfraStrike"
 DISPLAY_FULLSCREEN: bool = False
 
+# HUD / grid layout (shared by display and game engine for hit-testing)
+HUD_HEIGHT: int = 140   # pixels reserved at the top for the HUD overlay
+GRID_MARGIN: int = 20   # pixel gap between grid and screen/HUD edges
+GRID_ROWS: int = 4
+GRID_COLS: int = 4
+
 # ── Game ──────────────────────────────────────────────────────────────────────
 GAME_ROUND_DURATION_SECONDS: int = 60
 TARGET_SPAWN_INTERVAL_MS: int = 1500   # milliseconds between new target spawns

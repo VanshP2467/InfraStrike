@@ -57,6 +57,8 @@ class HUD:
         self._draw_score(state)
         self._draw_timer(state)
         self._draw_stats(state)
+        if state.current_problem:
+            self._draw_problem(state)
         if state.last_shot_position is not None:
             self._draw_crosshair(state.last_shot_position.x, state.last_shot_position.y)
         if state.phase == GamePhase.GAME_OVER:
@@ -94,6 +96,17 @@ class HUD:
         pygame.draw.line(self._surface, colour, (x, y - size), (x, y + size), thickness)
         pygame.draw.circle(self._surface, colour, (x, y), size // 2, thickness)
 
+    def _draw_problem(self, state: GameState) -> None:
+        """Draw the current math problem centered in the HUD, plus the math score."""
+        # Problem text centered horizontally at the top of the HUD.
+        problem_surf = self._font.render(state.current_problem, True, CYAN)
+        cx = DISPLAY_WIDTH // 2
+        self._surface.blit(problem_surf, problem_surf.get_rect(center=(cx, 20)))
+
+        # Math score on the right side below the round timer.
+        math_surf = self._font.render(f"MATH   {state.math_score}", True, GREEN)
+        self._surface.blit(math_surf, (DISPLAY_WIDTH - math_surf.get_width() - 10, 50))
+
     def _draw_game_over(self, state: GameState) -> None:
         # Semi-transparent dark overlay.
         overlay = pygame.Surface((DISPLAY_WIDTH, DISPLAY_HEIGHT), pygame.SRCALPHA)
@@ -110,16 +123,21 @@ class HUD:
             score_text, score_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2))
         )
 
+        math_text = self._font.render(f"Math Score: {state.math_score}", True, CYAN)
+        self._surface.blit(
+            math_text, math_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 40))
+        )
+
         acc_text = self._font.render(
             f"Accuracy: {state.accuracy * 100:.0f}%  Hits: {state.hits}  Misses: {state.misses}",
             True,
             WHITE,
         )
         self._surface.blit(
-            acc_text, acc_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 50))
+            acc_text, acc_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 90))
         )
 
         restart = self._font.render("Press ENTER to play again  |  ESC to quit", True, GREEN)
         self._surface.blit(
-            restart, restart.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 110))
+            restart, restart.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 140))
         )

@@ -21,7 +21,7 @@ import numpy as np
 import pygame
 
 from config.settings import DISPLAY_FPS, DISPLAY_FULLSCREEN, DISPLAY_HEIGHT, DISPLAY_TITLE, DISPLAY_WIDTH, \
-    DISPLAY_SHOW_CAMERA_FEED
+    DISPLAY_SHOW_CAMERA_FEED, GRID_COLS, GRID_MARGIN, GRID_ROWS, HUD_HEIGHT
 from infrastrike.game.game_engine import GamePhase, GameState
 from infrastrike.ui.hud import HUD
 from infrastrike.ui.grid import GridSpec, cell_rects
@@ -36,13 +36,12 @@ GREEN_RING = (80, 220, 80)
 YELLOW_RING = (255, 200, 0)
 DARK_BG = (20, 20, 30)
 
-# Grid & HUD
-HUD_HEIGHT = 140
-GRID_MARGIN = 20
-GRID_ROWS = 4
-GRID_COLS = 4
+# Grid & HUD (layout constants live in config.settings and are imported above)
 GRID_LINE_COLOUR = (0, 255, 0)
 GRID_LINE_WIDTH = 2
+CELL_CORRECT_COLOUR = (0, 200, 0, 120)   # semi-transparent green
+CELL_WRONG_COLOUR = (220, 50, 50, 120)   # semi-transparent red
+CELL_NEUTRAL_COLOUR = (255, 200, 0, 80)  # semi-transparent yellow
 
 
 class Display:
@@ -128,7 +127,7 @@ class Display:
                     waiting = False
 
     def render(self, state: GameState, camera_frame: np.ndarray) -> None:
-        """Render one frame: camera feed → targets → HUD.
+        """Render one frame: camera feed → grid → numbers → targets → HUD.
 
         Parameters
         ----------
@@ -137,25 +136,16 @@ class Display:
         camera_frame:
             BGR numpy array from the camera layer.
         """
-        # 1. Camera feed as background.
         # 1. Background.
         if DISPLAY_SHOW_CAMERA_FEED:
             self._blit_camera_frame(camera_frame)
         else:
-            # Use your static background image instead of the camera feed.
-            # (Assumes you loaded self._start_bg or rename it to self._bg)
             if getattr(self, "_start_bg", None) is not None:
                 self._screen.blit(self._start_bg, (0, 0))
             else:
                 self._screen.fill(DARK_BG)
-        grid_rect = pygame.Rect(
-            GRID_MARGIN,
-            HUD_HEIGHT + GRID_MARGIN,
-            self._width - 2 * GRID_MARGIN,
-            self._height - HUD_HEIGHT - 2 * GRID_MARGIN,
-            )
 
-        # 3) Draw the grid inside that region
+        # 2. Draw the grid lines inside the playfield rect below the HUD.
         self._draw_grid_in_rect(
             self._grid_rect,
             cols=self._grid_spec.cols,
@@ -164,15 +154,32 @@ class Display:
             width=GRID_LINE_WIDTH,
         )
 
+        # 3. Draw numbers centered in each cell (if grid data available).
+        if state.grid_numbers:
+            self._draw_grid_numbers(state.grid_numbers)
 
+        # 4. Highlight the last selected cell.
+        if state.last_selected_cell is not None:
+            row, col = state.last_selected_cell
+            if state.feedback == "correct":
+                highlight_colour = CELL_CORRECT_COLOUR
+            elif state.feedback == "wrong":
+                highlight_colour = CELL_WRONG_COLOUR
+            else:
+                highlight_colour = CELL_NEUTRAL_COLOUR
+            self._draw_cell_highlight(row, col, highlight_colour)
 
-        # 2. Draw active targets.
+        # 5. Draw active targets.
         for target in state.targets:
             if target.is_active:
                 self._draw_target(target)
 
-        # 3. HUD overlay.
+        # 6. HUD overlay (score, timer, problem text).
         self._hud.draw(state)
+
+        # 7. Brief feedback banner (correct / wrong) drawn last so it's on top.
+        if state.feedback:
+            self._draw_feedback(state.feedback)
 
         pygame.display.flip()
         self._clock.tick(self._fps)
@@ -226,3 +233,29 @@ class Display:
         for r in range(rows + 1):
             y = rect.top + int(r * rect.height / rows)
             pygame.draw.line(self._screen, colour, (rect.left, y), (rect.right, y), width)
+
+    def _draw_grid_numbers(self, grid_numbers: list[list[int]]) -> None:
+        """Draw each grid value centered inside its cell."""
+        for r, row in enumerate(grid_numbers):
+            for c, value in enumerate(row):
+                cell = self._grid_cells[r][c]
+                text_surf = self._font.render(str(value), True, WHITE)
+                self._screen.blit(text_surf, text_surf.get_rect(center=cell.center))
+
+    def _draw_cell_highlight(self, row: int, col: int, colour: tuple) -> None:
+        """Draw a semi-transparent coloured rectangle over *cell* (row, col)."""
+        cell = self._grid_cells[row][col]
+        highlight = pygame.Surface((cell.width, cell.height), pygame.SRCALPHA)
+        highlight.fill(colour)
+        self._screen.blit(highlight, cell.topleft)
+
+    def _draw_feedback(self, feedback: str) -> None:
+        """Draw a brief 'CORRECT!' or 'WRONG!' banner near the top of the playfield."""
+        if feedback == "correct":
+            text_surf = self._font.render("CORRECT!", True, GREEN_RING)
+        elif feedback == "wrong":
+            text_surf = self._font.render("WRONG!", True, RED)
+        else:
+            return
+        rect = text_surf.get_rect(center=(self._width // 2, HUD_HEIGHT + 50))
+        self._screen.blit(text_surf, rect)
