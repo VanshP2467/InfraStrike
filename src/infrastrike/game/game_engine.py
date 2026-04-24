@@ -18,8 +18,8 @@ from config.settings import (
 )
 from infrastrike.detection.ir_detector import ShotPosition
 
-_DEBOUNCE_COOLDOWN_S: float = 0.3   # minimum seconds between counted shots
-_FEEDBACK_DURATION_S: float = 0.8   # seconds to display correct/wrong feedback
+_DEBOUNCE_COOLDOWN_S: float = 0.3  # minimum seconds between counted shots
+_FEEDBACK_DURATION_S: float = 0.8  # seconds to display correct/wrong feedback
 
 
 @dataclass(frozen=True)
@@ -47,7 +47,9 @@ PROBLEM_BANK: list[MathProblem] = [
 ]
 
 
-def _generate_grid(answer: int, rows: int = GRID_ROWS, cols: int = GRID_COLS) -> list[list[int]]:
+def _generate_grid(
+    answer: int, rows: int = GRID_ROWS, cols: int = GRID_COLS
+) -> list[list[int]]:
     """Return a *rows* × *cols* grid containing exactly one cell equal to *answer*.
 
     All other cells are unique distractor numbers drawn from 1–20 (excluding
@@ -186,7 +188,10 @@ class GameEngine:
             self._last_shot = shot_position
 
             # Math-grid: fire only on rising edge (None → detected) + cooldown.
-            if self._prev_shot_was_none and (now - self._last_shot_time) >= _DEBOUNCE_COOLDOWN_S:
+            if (
+                self._prev_shot_was_none
+                and (now - self._last_shot_time) >= _DEBOUNCE_COOLDOWN_S
+            ):
                 self._last_shot_time = now
                 self._process_math_shot(shot_position, camera_frame_shape)
 
@@ -249,7 +254,10 @@ class GameEngine:
         grid_w = self._screen_width - 2 * GRID_MARGIN
         grid_h = self._screen_height - HUD_HEIGHT - 2 * GRID_MARGIN
 
-        if not (grid_left <= disp_x < grid_left + grid_w and grid_top <= disp_y < grid_top + grid_h):
+        if not (
+            grid_left <= disp_x < grid_left + grid_w
+            and grid_top <= disp_y < grid_top + grid_h
+        ):
             return None
 
         col = int((disp_x - grid_left) * GRID_COLS / grid_w)

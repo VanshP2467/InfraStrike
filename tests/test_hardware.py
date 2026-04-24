@@ -1,7 +1,5 @@
 """Tests for GPIOController (Contributor 5)."""
 
-import pytest
-
 from infrastrike.hardware.gpio_controller import GPIOController
 
 

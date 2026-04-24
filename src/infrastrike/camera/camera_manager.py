@@ -160,4 +160,3 @@ class CameraManager:
     def is_running(self) -> bool:
         """``True`` if the camera has been started."""
         return self._running
-

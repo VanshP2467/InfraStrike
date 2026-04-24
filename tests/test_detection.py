@@ -1,7 +1,6 @@
 """Tests for IRDetector (Contributor 2)."""
 
 import numpy as np
-import pytest
 
 from infrastrike.detection.ir_detector import IRDetector, ShotPosition
 
@@ -11,7 +10,9 @@ def _blank_frame(width: int = 640, height: int = 480) -> np.ndarray:
     return np.zeros((height, width, 3), dtype=np.uint8)
 
 
-def _frame_with_blob(cx: int, cy: int, radius: int = 10, width: int = 640, height: int = 480) -> np.ndarray:
+def _frame_with_blob(
+    cx: int, cy: int, radius: int = 10, width: int = 640, height: int = 480
+) -> np.ndarray:
     """Return a BGR frame with a single bright white circle (IR blob)."""
     import cv2
 

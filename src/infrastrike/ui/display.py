@@ -76,7 +76,9 @@ class Display:
         try:
             bg_path = asset_path("images", "infrastrike_bg.png")
             loaded = pygame.image.load(str(bg_path)).convert()
-            self._start_bg = pygame.transform.smoothscale(loaded, (self._width, self._height))
+            self._start_bg = pygame.transform.smoothscale(
+                loaded, (self._width, self._height)
+            )
         except Exception as exc:  # pragma: no cover - fallback path
             logger.warning("Start background image not loaded: %s", exc)
 
@@ -89,8 +91,12 @@ class Display:
 
         title_font = pygame.font.SysFont("monospace", 72, bold=True)
         title_surf = title_font.render("InfraStrike", True, (200, 80, 80))
-        subtitle = self._font.render("Point your IR gun and pull the trigger!", True, WHITE)
-        prompt = self._font.render("Press ENTER or SPACE to start", True, (100, 220, 100))
+        subtitle = self._font.render(
+            "Point your IR gun and pull the trigger!", True, WHITE
+        )
+        prompt = self._font.render(
+            "Press ENTER or SPACE to start", True, (100, 220, 100)
+        )
 
         cx, cy = self._width // 2, self._height // 2
         self._screen.blit(title_surf, title_surf.get_rect(center=(cx, cy - 100)))
@@ -171,11 +177,15 @@ class Display:
     ) -> None:
         for col in range(cols + 1):
             x = rect.left + int(col * rect.width / cols)
-            pygame.draw.line(self._screen, colour, (x, rect.top), (x, rect.bottom), width)
+            pygame.draw.line(
+                self._screen, colour, (x, rect.top), (x, rect.bottom), width
+            )
 
         for row in range(rows + 1):
             y = rect.top + int(row * rect.height / rows)
-            pygame.draw.line(self._screen, colour, (rect.left, y), (rect.right, y), width)
+            pygame.draw.line(
+                self._screen, colour, (rect.left, y), (rect.right, y), width
+            )
 
     def _draw_grid_numbers(self, grid_numbers: list[list[int]]) -> None:
         """Draw each grid value centered inside its cell."""

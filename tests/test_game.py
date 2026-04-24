@@ -4,7 +4,12 @@ import time
 
 from config.settings import GRID_COLS, GRID_MARGIN, GRID_ROWS, HUD_HEIGHT
 from infrastrike.detection.ir_detector import ShotPosition
-from infrastrike.game.game_engine import GameEngine, GamePhase, GameState, _generate_grid
+from infrastrike.game.game_engine import (
+    GameEngine,
+    GamePhase,
+    GameState,
+    _generate_grid,
+)
 
 
 class TestGameEngineLifecycle:

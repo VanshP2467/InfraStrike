@@ -96,14 +96,10 @@ class IRDetector:
 
     # ── Internal helpers ──────────────────────────────────────────────────────
 
-    def _pick_best_contour(
-        self, contours: tuple[np.ndarray, ...]
-    ) -> np.ndarray | None:
+    def _pick_best_contour(self, contours: tuple[np.ndarray, ...]) -> np.ndarray | None:
         """Return the largest contour whose area is within the valid range."""
         valid = [
-            c
-            for c in contours
-            if self.min_area <= cv2.contourArea(c) <= self.max_area
+            c for c in contours if self.min_area <= cv2.contourArea(c) <= self.max_area
         ]
         if not valid:
             return None

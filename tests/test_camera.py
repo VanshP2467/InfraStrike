@@ -66,6 +66,7 @@ class TestCameraManagerModule3NoIR:
 
     def test_default_exposure_time_set(self):
         from config.settings import CAMERA_EXPOSURE_TIME_US
+
         cam = CameraManager()
         assert cam.exposure_time_us == CAMERA_EXPOSURE_TIME_US
 
@@ -75,6 +76,7 @@ class TestCameraManagerModule3NoIR:
 
     def test_default_analogue_gain_set(self):
         from config.settings import CAMERA_ANALOGUE_GAIN
+
         cam = CameraManager()
         assert cam.analogue_gain == CAMERA_ANALOGUE_GAIN
 
@@ -88,4 +90,3 @@ class TestCameraManagerModule3NoIR:
         self.cam.start()
         frame = self.cam.get_frame()
         assert frame.shape == (240, 320, 3)
-

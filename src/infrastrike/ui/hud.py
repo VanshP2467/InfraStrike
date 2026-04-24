@@ -67,7 +67,13 @@ class HUD:
         self._surface.blit(title, title.get_rect(center=(cx, DISPLAY_HEIGHT // 2 - 80)))
 
         score_text = self._font.render(f"Final Score: {state.score}", True, YELLOW)
-        self._surface.blit(score_text, score_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2)))
+        self._surface.blit(
+            score_text, score_text.get_rect(center=(cx, DISPLAY_HEIGHT // 2))
+        )
 
-        restart = self._font.render("Press ENTER to play again  |  ESC to quit", True, GREEN)
-        self._surface.blit(restart, restart.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 70)))
+        restart = self._font.render(
+            "Press ENTER to play again  |  ESC to quit", True, GREEN
+        )
+        self._surface.blit(
+            restart, restart.get_rect(center=(cx, DISPLAY_HEIGHT // 2 + 70))
+        )
