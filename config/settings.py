@@ -38,11 +38,6 @@ GRID_COLS: int = 4
 
 # ── Game ──────────────────────────────────────────────────────────────────────
 GAME_ROUND_DURATION_SECONDS: int = 60
-TARGET_SPAWN_INTERVAL_MS: int = 1500   # milliseconds between new target spawns
-TARGET_LIFETIME_MS: int = 3000         # milliseconds before a target disappears
-MAX_TARGETS_ON_SCREEN: int = 5
-POINTS_PER_HIT: int = 10
-PENALTY_PER_MISS: int = 5
 
 # ── Hardware / GPIO ───────────────────────────────────────────────────────────
 # No GPIO trigger – the IR flash detected by the camera is the sole trigger.

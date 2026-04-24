@@ -1,17 +1,4 @@
-"""
-GameEngine – central game-state machine.
-
-Contributor 3 owns this module.
-
-Responsibilities
-----------------
-* Manage the overall game lifecycle: IDLE → RUNNING → GAME_OVER.
-* Spawn targets on a configurable interval.
-* Process shot positions from the detection layer and update scores.
-* Expose a snapshot ``GameState`` dataclass for the UI to render.
-* Drive the Math Grid game mode: present math problems on a 4×4 grid,
-  accept IR shots mapped to display coordinates, and score correct answers.
-"""
+"""GameEngine – central state machine for the Math Grid game."""
 
 from __future__ import annotations
 
@@ -28,15 +15,8 @@ from config.settings import (
     GRID_MARGIN,
     GRID_ROWS,
     HUD_HEIGHT,
-    MAX_TARGETS_ON_SCREEN,
-    TARGET_LIFETIME_MS,
-    TARGET_SPAWN_INTERVAL_MS,
 )
 from infrastrike.detection.ir_detector import ShotPosition
-from infrastrike.game.score_manager import ScoreManager
-from infrastrike.game.target import Target
-
-# ── Math-grid constants ───────────────────────────────────────────────────────
 
 _DEBOUNCE_COOLDOWN_S: float = 0.3   # minimum seconds between counted shots
 _FEEDBACK_DURATION_S: float = 0.8   # seconds to display correct/wrong feedback
@@ -95,18 +75,12 @@ class GamePhase(Enum):
 
 @dataclass
 class GameState:
-    """Immutable snapshot of the game world passed to the UI each frame."""
+    """Snapshot of the game state passed to the UI each frame."""
 
     phase: GamePhase
-    targets: list[Target]
     score: int
-    hits: int
-    misses: int
-    accuracy: float
     time_remaining_seconds: float
     last_shot_position: ShotPosition | None = None
-    # ── Math grid ────────────────────────────────────────────────────────────
-    math_score: int = 0
     current_problem: str = ""
     grid_numbers: list[list[int]] = field(default_factory=list)
     last_selected_cell: tuple[int, int] | None = None
@@ -117,42 +91,24 @@ class GameState:
 
 
 class GameEngine:
-    """Drives the core game loop logic.
-
-    Example usage::
-
-        engine = GameEngine()
-        engine.start()
-        while engine.is_running():
-            engine.update(shot_position=pos, camera_frame_shape=frame.shape)
-            state = engine.get_state()
-    """
+    """Drives the core game loop logic."""
 
     def __init__(
         self,
         round_duration: int = GAME_ROUND_DURATION_SECONDS,
-        spawn_interval_ms: int = TARGET_SPAWN_INTERVAL_MS,
-        target_lifetime_ms: int = TARGET_LIFETIME_MS,
-        max_targets: int = MAX_TARGETS_ON_SCREEN,
         screen_width: int = DISPLAY_WIDTH,
         screen_height: int = DISPLAY_HEIGHT,
     ) -> None:
         self._round_duration = round_duration
-        self._spawn_interval_ms = spawn_interval_ms
-        self._target_lifetime_ms = target_lifetime_ms
-        self._max_targets = max_targets
         self._screen_width = screen_width
         self._screen_height = screen_height
 
         self._phase = GamePhase.IDLE
-        self._score_manager = ScoreManager()
-        self._targets: list[Target] = []
         self._round_start: float = 0.0
-        self._last_spawn: float = 0.0
         self._last_shot: ShotPosition | None = None
 
         # Math-grid internal state (initialised in start()).
-        self._math_score: int = 0
+        self._score: int = 0
         self._problem_idx: int = 0
         self._current_problem: MathProblem = PROBLEM_BANK[0]
         self._grid_numbers: list[list[int]] = []
@@ -167,14 +123,11 @@ class GameEngine:
     def start(self) -> None:
         """Begin a new game round."""
         self._phase = GamePhase.RUNNING
-        self._score_manager.reset()
-        self._targets.clear()
         self._round_start = time.monotonic()
-        self._last_spawn = self._round_start
         self._last_shot = None
 
         # Reset math-grid state.
-        self._math_score = 0
+        self._score = 0
         self._problem_idx = 0
         self._current_problem = PROBLEM_BANK[0]
         self._grid_numbers = _generate_grid(self._current_problem.answer)
@@ -228,35 +181,9 @@ class GameEngine:
             self._phase = GamePhase.GAME_OVER
             return
 
-        # ── Spawn new targets ────────────────────────────────────────────────
-        elapsed_since_spawn_ms = (now - self._last_spawn) * 1000
-        if (
-            elapsed_since_spawn_ms >= self._spawn_interval_ms
-            and len(self._targets) < self._max_targets
-        ):
-            self._spawn_target()
-            self._last_spawn = now
-
-        # ── Expire old targets ────────────────────────────────────────────────
-        expired = [t for t in self._targets if t.is_expired]
-        for t in expired:
-            self._score_manager.register_miss()
-        self._targets = [t for t in self._targets if t.is_active]
-
         # ── Process shot ─────────────────────────────────────────────────────
         if shot_position is not None:
             self._last_shot = shot_position
-
-            # Target-shooting: every detected blob fires at targets.
-            hit_any = False
-            for target in self._targets:
-                if target.check_hit(shot_position.x, shot_position.y):
-                    self._score_manager.register_hit()
-                    hit_any = True
-                    break
-            if not hit_any:
-                self._score_manager.register_miss()
-            self._targets = [t for t in self._targets if t.is_active]
 
             # Math-grid: fire only on rising edge (None → detected) + cooldown.
             if self._prev_shot_was_none and (now - self._last_shot_time) >= _DEBOUNCE_COOLDOWN_S:
@@ -273,29 +200,13 @@ class GameEngine:
         time_remaining = max(0.0, self._round_duration - elapsed)
         return GameState(
             phase=self._phase,
-            targets=list(self._targets),
-            score=self._score_manager.score,
-            hits=self._score_manager.hits,
-            misses=self._score_manager.misses,
-            accuracy=self._score_manager.accuracy,
+            score=self._score,
             time_remaining_seconds=time_remaining,
             last_shot_position=self._last_shot,
-            math_score=self._math_score,
             current_problem=self._current_problem.text,
             grid_numbers=[row[:] for row in self._grid_numbers],
             last_selected_cell=self._last_selected_cell,
             feedback=self._feedback,
-        )
-
-    # ── Internal helpers ──────────────────────────────────────────────────────
-
-    def _spawn_target(self) -> None:
-        """Create a new target at a random position within the safe margin."""
-        margin = 60  # pixels from screen edge
-        x = random.randint(margin, self._screen_width - margin)
-        y = random.randint(margin, self._screen_height - margin)
-        self._targets.append(
-            Target(x=x, y=y, lifetime_ms=self._target_lifetime_ms)
         )
 
     def _process_math_shot(
@@ -323,7 +234,7 @@ class GameEngine:
         value = self._grid_numbers[row][col]
         now = time.monotonic()
         if value == self._current_problem.answer:
-            self._math_score += 1
+            self._score += 1
             self._feedback = "correct"
             self._feedback_until = now + _FEEDBACK_DURATION_S
             self._advance_problem()
