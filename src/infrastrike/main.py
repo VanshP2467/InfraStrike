@@ -44,7 +44,7 @@ def main() -> None:
             shot_position = detector.detect(frame)
 
             # 3. Update game state – the flash itself is the trigger.
-            engine.update(shot_position=shot_position)
+            engine.update(shot_position=shot_position, camera_frame_shape=frame.shape)
 
             # 4. Render the current frame + HUD.
             display.render(engine.get_state(), frame)

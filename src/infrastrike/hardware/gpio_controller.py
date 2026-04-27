@@ -53,9 +53,7 @@ class GPIOController:
         On non-Pi hardware this is a no-op.
         """
         if not _GPIO_AVAILABLE:
-            logger.warning(
-                "RPi.GPIO not available – LED control disabled."
-            )
+            logger.warning("RPi.GPIO not available – LED control disabled.")
             self._ready = True
             return
 
@@ -85,4 +83,3 @@ class GPIOController:
     def is_ready(self) -> bool:
         """``True`` after :meth:`setup` has been called successfully."""
         return self._ready
-
