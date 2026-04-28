@@ -1,0 +1,44 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "infrastrike"
+version = "0.1.0"
+description = "IR light-gun shooting game using Raspberry Pi noIR camera and pygame"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pygame>=2.5",
+    "opencv-python>=4.9",
+    "numpy>=1.26",
+    # Raspberry Pi-specific packages – installed only on the target hardware.
+    # Uncomment on the Pi or let uv extras handle them:
+    # "picamera2>=0.3",
+    # "RPi.GPIO>=0.7",
+]
+
+[project.scripts]
+infrastrike = "infrastrike.main:main"
+
+[project.optional-dependencies]
+pi = [
+    "picamera2>=0.3",
+    "RPi.GPIO>=0.7",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.12",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/infrastrike", "config"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
+pythonpath = ["src", "config"]
+
+[tool.ruff]
+target-version = "py311"
