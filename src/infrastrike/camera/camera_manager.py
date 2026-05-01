@@ -31,6 +31,8 @@ import logging
 
 import numpy as np
 
+import cv2
+
 try:
     from picamera2 import Picamera2  # type: ignore[import-untyped]
 
@@ -152,7 +154,7 @@ class CameraManager:
             height, width = self.resolution[1], self.resolution[0]
             return np.zeros((height, width, 3), dtype=np.uint8)
 
-        return self._camera.capture_array("main")
+        return cv2.flip(self._camera.capture_array("main"), 1)
 
     # ── Properties ────────────────────────────────────────────────────────────
 
