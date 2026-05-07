@@ -17,7 +17,6 @@ import pygame
 from infrastrike.camera.camera_manager import CameraManager
 from infrastrike.detection.ir_detector import IRDetector
 from infrastrike.game.game_engine import GameEngine, GamePhase
-from infrastrike.hardware.gpio_controller import GPIOController
 from infrastrike.ui.display import Display
 
 
@@ -26,12 +25,10 @@ def main() -> None:
 
     camera = CameraManager()
     detector = IRDetector()
-    gpio = GPIOController()
     display = Display()
     engine = GameEngine()
 
     camera.start()
-    gpio.setup()
     display.show_start_screen()
 
     try:
@@ -74,7 +71,6 @@ def main() -> None:
                 display.show_game_over_screen(state, last_frame)
     finally:
         camera.stop()
-        gpio.cleanup()
         display.quit()
         pygame.quit()
         sys.exit(0)
