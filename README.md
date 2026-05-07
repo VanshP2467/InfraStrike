@@ -158,6 +158,16 @@ GPIO_LED_PIN           = 27    # BCM pin
 Edit `config/settings.py` to tune sensitivity, Math Grid layout, and display without
 touching module code.
 
+UI visuals are centralized in `src/infrastrike/ui/theme.py`, including the arcade
+palette, HUD/grid colors, and pixel-friendly font sizes. The embedded pixel font
+is `src/infrastrike/assets/fonts/PressStart2P-Regular.ttf` (licensed under SIL OFL
+in `src/infrastrike/assets/fonts/LICENSE-PressStart2P.txt`), and `load_pixel_font()`
+automatically falls back to a default pygame font if loading fails.
+
+To customize the look, edit the color constants and font size values in
+`ui/theme.py`; gameplay behavior is unchanged because these values only affect
+rendering.
+
 ---
 
 ## Running Tests
