@@ -24,18 +24,31 @@ from infrastrike.game.game_engine import GameState
 from infrastrike.path_utils import asset_path
 from infrastrike.ui.grid import GridSpec, cell_rects
 from infrastrike.ui.hud import HUD
+from infrastrike.ui.theme import (
+    ACCENT_YELLOW,
+    BG_NAVY,
+    BG_NAVY_LIGHT,
+    CAMERA_DIM_OVERLAY,
+    GRID_CELL_BG,
+    GRID_CORRECT,
+    GRID_LINE,
+    GRID_NUMBER_FONT_SIZE,
+    GRID_SELECTION,
+    GRID_WRONG,
+    PANEL_BLUE,
+    PANEL_BORDER,
+    SCANLINE_COLOUR,
+    SCANLINE_STEP,
+    SUCCESS_GREEN,
+    TEXT_WHITE,
+    TITLE_FONT_SIZE,
+    WARNING_RED,
+    load_pixel_font,
+)
 
 logger = logging.getLogger(__name__)
 
-WHITE = (255, 255, 255)
-RED = (220, 50, 50)
-GREEN = (80, 220, 80)
-DARK_BG = (20, 20, 30)
-GRID_LINE_COLOUR = (0, 255, 0)
-GRID_LINE_WIDTH = 2
-CELL_CORRECT_COLOUR = (0, 200, 0, 120)
-CELL_WRONG_COLOUR = (220, 50, 50, 120)
-CELL_NEUTRAL_COLOUR = (255, 200, 0, 80)
+GRID_LINE_WIDTH = 4
 
 
 class Display:
@@ -70,7 +83,8 @@ class Display:
 
         self._clock = pygame.time.Clock()
         self._hud = HUD(self._screen)
-        self._font = pygame.font.SysFont("monospace", 36, bold=True)
+        self._font = load_pixel_font(GRID_NUMBER_FONT_SIZE, bold=True)
+        self._title_font = load_pixel_font(TITLE_FONT_SIZE, bold=True)
 
         self._start_bg: pygame.Surface | None = None
         try:
@@ -87,15 +101,14 @@ class Display:
         if self._start_bg is not None:
             self._screen.blit(self._start_bg, (0, 0))
         else:
-            self._screen.fill(DARK_BG)
+            self._draw_arcade_background()
 
-        title_font = pygame.font.SysFont("monospace", 72, bold=True)
-        title_surf = title_font.render("InfraStrike", True, (200, 80, 80))
+        title_surf = self._title_font.render("InfraStrike", True, ACCENT_YELLOW)
         subtitle = self._font.render(
-            "Point your IR gun and pull the trigger!", True, WHITE
+            "POINT YOUR IR GUN AND PULL THE TRIGGER!", True, TEXT_WHITE
         )
         prompt = self._font.render(
-            "Press ENTER or SPACE to start", True, (100, 220, 100)
+            "PRESS ENTER OR SPACE TO START", True, SUCCESS_GREEN
         )
 
         cx, cy = self._width // 2, self._height // 2
@@ -120,16 +133,18 @@ class Display:
         """Render one frame: background → grid → numbers → HUD."""
         if DISPLAY_SHOW_CAMERA_FEED:
             self._blit_camera_frame(camera_frame)
+            self._draw_camera_overlay()
         elif self._start_bg is not None:
             self._screen.blit(self._start_bg, (0, 0))
         else:
-            self._screen.fill(DARK_BG)
+            self._draw_arcade_background()
 
+        self._draw_grid_panel()
         self._draw_grid_in_rect(
             self._grid_rect,
             cols=self._grid_spec.cols,
             rows=self._grid_spec.rows,
-            colour=GRID_LINE_COLOUR,
+            colour=GRID_LINE,
             width=GRID_LINE_WIDTH,
         )
 
@@ -139,11 +154,11 @@ class Display:
         if state.last_selected_cell is not None:
             row, col = state.last_selected_cell
             if state.feedback == "correct":
-                highlight_colour = CELL_CORRECT_COLOUR
+                highlight_colour = GRID_CORRECT
             elif state.feedback == "wrong":
-                highlight_colour = CELL_WRONG_COLOUR
+                highlight_colour = GRID_WRONG
             else:
-                highlight_colour = CELL_NEUTRAL_COLOUR
+                highlight_colour = GRID_SELECTION
             self._draw_cell_highlight(row, col, highlight_colour)
 
         self._hud.draw(state)
@@ -151,6 +166,7 @@ class Display:
         if state.feedback:
             self._draw_feedback(state.feedback)
 
+        self._draw_scanlines()
         pygame.display.flip()
         self._clock.tick(self._fps)
 
@@ -166,6 +182,26 @@ class Display:
             rgb_frame = cv2.resize(rgb_frame, (self._width, self._height))
         surf = pygame.surfarray.make_surface(rgb_frame.swapaxes(0, 1))
         self._screen.blit(surf, (0, 0))
+
+    def _draw_camera_overlay(self) -> None:
+        overlay = pygame.Surface((self._width, self._height), pygame.SRCALPHA)
+        overlay.fill(CAMERA_DIM_OVERLAY)
+        self._screen.blit(overlay, (0, 0))
+
+    def _draw_arcade_background(self) -> None:
+        self._screen.fill(BG_NAVY)
+        band_height = max(1, self._height // 18)
+        for index in range(0, self._height, band_height * 2):
+            band = pygame.Rect(0, index, self._width, band_height)
+            pygame.draw.rect(self._screen, BG_NAVY_LIGHT, band)
+
+    def _draw_grid_panel(self) -> None:
+        panel = self._grid_rect.inflate(16, 16)
+        pygame.draw.rect(self._screen, PANEL_BLUE, panel)
+        pygame.draw.rect(self._screen, PANEL_BORDER, panel, width=4)
+        for row in self._grid_cells:
+            for cell in row:
+                pygame.draw.rect(self._screen, GRID_CELL_BG, cell)
 
     def _draw_grid_in_rect(
         self,
@@ -192,7 +228,7 @@ class Display:
         for row_index, row in enumerate(grid_numbers):
             for col_index, value in enumerate(row):
                 cell = self._grid_cells[row_index][col_index]
-                text_surf = self._font.render(str(value), True, WHITE)
+                text_surf = self._font.render(str(value), True, TEXT_WHITE)
                 self._screen.blit(text_surf, text_surf.get_rect(center=cell.center))
 
     def _draw_cell_highlight(
@@ -210,11 +246,17 @@ class Display:
     def _draw_feedback(self, feedback: str) -> None:
         """Draw a brief CORRECT!/WRONG! banner near the top of the playfield."""
         if feedback == "correct":
-            text_surf = self._font.render("CORRECT!", True, GREEN)
+            text_surf = self._font.render("CORRECT!", True, SUCCESS_GREEN)
         elif feedback == "wrong":
-            text_surf = self._font.render("WRONG!", True, RED)
+            text_surf = self._font.render("WRONG!", True, WARNING_RED)
         else:
             return
 
         rect = text_surf.get_rect(center=(self._width // 2, HUD_HEIGHT + 50))
         self._screen.blit(text_surf, rect)
+
+    def _draw_scanlines(self) -> None:
+        scanlines = pygame.Surface((self._width, self._height), pygame.SRCALPHA)
+        for y in range(0, self._height, SCANLINE_STEP):
+            pygame.draw.line(scanlines, SCANLINE_COLOUR, (0, y), (self._width, y), 1)
+        self._screen.blit(scanlines, (0, 0))
