@@ -24,11 +24,11 @@ from infrastrike.ui.theme import (
 class HUD:
     """Renders all on-screen UI overlays on a pygame Surface."""
 
-    def __init__(self, surface: pygame.Surface, font_size: int = 28) -> None:
+    def __init__(self, surface: pygame.Surface, font_size: int = HUD_FONT_SIZE) -> None:
         self._surface = surface
-        _ = font_size
-        self._font = load_pixel_font(HUD_FONT_SIZE, bold=True)
-        self._large_font = load_pixel_font(HUD_LARGE_FONT_SIZE, bold=True)
+        self._font = load_pixel_font(font_size, bold=True)
+        large_size = max(HUD_LARGE_FONT_SIZE, font_size * 2)
+        self._large_font = load_pixel_font(large_size, bold=True)
 
     def draw(self, state: GameState) -> None:
         """Draw all HUD elements for the current *state*."""
