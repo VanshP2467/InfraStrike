@@ -170,6 +170,37 @@ class Display:
         pygame.display.flip()
         self._clock.tick(self._fps)
 
+    def show_game_over_screen(
+        self, state: GameState, camera_frame: np.ndarray | None = None
+    ) -> None:
+        """Render a game-over overlay and restart/quit instructions."""
+        if DISPLAY_SHOW_CAMERA_FEED and camera_frame is not None:
+            self._blit_camera_frame(camera_frame)
+            self._draw_camera_overlay()
+        elif self._start_bg is not None:
+            self._screen.blit(self._start_bg, (0, 0))
+        else:
+            self._draw_arcade_background()
+
+        overlay = pygame.Surface((self._width, self._height), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 180))
+        self._screen.blit(overlay, (0, 0))
+
+        cx, cy = self._width // 2, self._height // 2
+        title = self._title_font.render("GAME OVER", True, WARNING_RED)
+        score = self._font.render(f"FINAL SCORE: {state.score}", True, TEXT_WHITE)
+        restart = self._font.render("PRESS ANY KEY TO RESTART", True, SUCCESS_GREEN)
+        quit_prompt = self._font.render("PRESS Q TO QUIT", True, ACCENT_YELLOW)
+
+        self._screen.blit(title, title.get_rect(center=(cx, cy - 110)))
+        self._screen.blit(score, score.get_rect(center=(cx, cy - 25)))
+        self._screen.blit(restart, restart.get_rect(center=(cx, cy + 40)))
+        self._screen.blit(quit_prompt, quit_prompt.get_rect(center=(cx, cy + 90)))
+
+        self._draw_scanlines()
+        pygame.display.flip()
+        self._clock.tick(self._fps)
+
     def quit(self) -> None:
         """Destroy the pygame window."""
         pygame.display.quit()
